@@ -40,10 +40,10 @@ Public Class NumberSuffixAnalyzer
     Dim nme = TryCast( context.Node, LiteralExpressionSyntax)
     If nme Is Nothing Then Exit Sub
     If nme.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
-    Dim si = context.SemanticModel.GetTypeInfo(nme, context.CancellationToken )
-    if si.ConvertedType.GetType.Equals(si.Type) Then exit Sub
     Dim tkn =nme.Token
     If HasTypeSuffix(tkn) Then Return
+    Dim si = context.SemanticModel.GetTypeInfo(nme, context.CancellationToken )
+    if si.ConvertedType.GetType.Equals(si.Type) Then exit Sub
     Dim p = nme.Parent
     If p Is Nothing Then exit Sub
     dim pe = TryCast(p, BinaryExpressionSyntax)
@@ -56,6 +56,7 @@ Public Class NumberSuffixAnalyzer
     Else
       return
     End If
+    If ct.Type.Equals(si.Type) THen Exit sub
     ' For all such symbols, produce a diagnostic.
     Dim ts = GetTypeSuffix( ct.Type)
     If ts Is Nothing Then Exit Sub
@@ -69,7 +70,7 @@ Public Class NumberSuffixAnalyzer
            txt.EndsWith("US") OrElse txt.EndsWith("UI") OrElse txt.EndsWith("UL")
   End Function
   Friend shared Function GetTypeSuffix(si AS ITypeSymbol) As String
-    dim tname=si.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+    dim tname=si.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
     Select Case tname
            Case "Short"    : Return "S"
            Case "Integer"  : Return "I"

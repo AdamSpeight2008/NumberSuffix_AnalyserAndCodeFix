@@ -6,6 +6,7 @@ Imports Microsoft.CodeAnalysis.Diagnostics
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 
 Namespace NumberSuffix.Test
+
   <TestClass>
   Public Class UnitTest
     Inherits CodeFixVerifier
@@ -43,6 +44,33 @@ Module Module1
   Function m(m2 As ULong, mask As ULong) As Boolean
     Dim fraction As ULong = m2 And mask
     Return fraction <> 0UL
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod>
+    Public Sub TestMethod3()
+
+      Dim test = "
+Module Module1
+  Function m() As Integer
+    Dim fraction As Integer = 1
+    Return fraction + 1
+  End Function
+End Module"
+      Dim expected = New DiagnosticResult With {.Id = "NumberSuffix",
+          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UL"),
+          .Severity = DiagnosticSeverity.Warning}
+
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Integer
+    Dim fraction As Integer = 1
+    Return fraction + 1
   End Function
 End Module"
       VerifyBasicFix(test, fixtest)
