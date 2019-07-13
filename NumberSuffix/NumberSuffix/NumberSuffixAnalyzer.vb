@@ -30,48 +30,44 @@ Public Class NumberSuffixAnalyzer
   End Property
 
   Public Overrides Sub Initialize(context As AnalysisContext)
-    ' TODO: Consider registering other actions that act on syntax instead of or in addition to symbols
-    ' See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Analyzer%20Actions%20Semantics.md for more information
     context.RegisterSyntaxNodeAction(AddressOf Analyze, SyntaxKind.NumericLiteralExpression)
   End Sub
 
   Private Sub Analyze(context As SyntaxNodeAnalysisContext)
-    ' TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
-    Dim nme = TryCast( context.Node, LiteralExpressionSyntax)
-    If nme Is Nothing Then Exit Sub
-    If nme.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
-    Dim tkn =nme.Token
-    If HasTypeSuffix(tkn) Then Return
-    Dim si = context.SemanticModel.GetTypeInfo(nme, context.CancellationToken )
-    if si.ConvertedType.GetType.Equals(si.Type) Then exit Sub
-    Dim p = nme.Parent
-    If p Is Nothing Then exit Sub
-    dim pe = TryCast(p, BinaryExpressionSyntax)
-    If pe Is Nothing THen Exit Sub
-    Dim ct as TypeInfo
-    If pe.Left.Equals(nme) Then
-       ct = context.SemanticModel.GetTypeInfo(pe.Right, context.CancellationToken)
-    Elseif pe.Right.Equals(nme) Then
-      ct =  context.SemanticModel.GetTypeInfo(pe.Left, context.CancellationToken)
+    Dim literal = TryCast( context.Node, LiteralExpressionSyntax)
+    If literal Is Nothing Then Exit Sub
+    If literal.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
+    Dim tokenFromLiteral =literal.Token
+    If HasTypeSuffix(tokenFromLiteral) Then Return
+    Dim literalTypeInfo = context.SemanticModel.GetTypeInfo(literal, context.CancellationToken )
+    if literalTypeInfo.ConvertedType.GetType.Equals(literalTypeInfo.Type) Then exit Sub
+    Dim parentOfLiteral = literal.Parent
+    If parentOfLiteral Is Nothing Then exit Sub
+    dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
+    If parentBinaryExpression Is Nothing THen Exit Sub
+    Dim targetTypeInfo as TypeInfo
+    If parentBinaryExpression.Left.Equals(literal) Then
+       targetTypeInfo = context.SemanticModel.GetTypeInfo(parentBinaryExpression.Right, context.CancellationToken)
+    Elseif parentBinaryExpression.Right.Equals(literal) Then
+      targetTypeInfo =  context.SemanticModel.GetTypeInfo(parentBinaryExpression.Left, context.CancellationToken)
     Else
       return
     End If
-    If ct.Type.Equals(si.Type) THen Exit sub
-    ' For all such symbols, produce a diagnostic.
-    Dim ts = GetTypeSuffix( ct.Type)
-    If ts Is Nothing Then Exit Sub
-    Dim diag = Diagnostic.Create(Rule, nme.GetLocation, ts)
+    If targetTypeInfo.Type.Equals(literalTypeInfo.Type) THen Exit sub
+    Dim typeSuffix = GetTypeSuffix( targetTypeInfo.Type)
+    If typeSuffix Is Nothing Then Exit Sub
+    Dim diag = Diagnostic.Create(Rule, literal.GetLocation, typeSuffix)
     context.ReportDiagnostic(diag)
   End Sub
- private Function HasTypeSuffix(tkn As SyntaxToken) as Boolean
-    Dim txt = tkn.Text.ToUpperInvariant()
-    Return txt.EndsWith("S")  OrElse txt.EndsWith("I")  OrElse txt.EndsWith("L")  OrElse
-           txt.EndsWith("D")  OrElse txt.EndsWith("F")  OrElse txt.EndsWith("R")  OrElse
-           txt.EndsWith("US") OrElse txt.EndsWith("UI") OrElse txt.EndsWith("UL")
+ private Function HasTypeSuffix(literalToken As SyntaxToken) as Boolean
+    Dim literalSuffix = literalToken.Text.ToUpperInvariant()
+    Return literalSuffix.EndsWith("S")  OrElse literalSuffix.EndsWith("I")  OrElse literalSuffix.EndsWith("L")  OrElse
+           literalSuffix.EndsWith("D")  OrElse literalSuffix.EndsWith("F")  OrElse literalSuffix.EndsWith("R")  OrElse
+           literalSuffix.EndsWith("US") OrElse literalSuffix.EndsWith("UI") OrElse literalSuffix.EndsWith("UL")
   End Function
-  Friend shared Function GetTypeSuffix(si AS ITypeSymbol) As String
-    dim tname=si.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
-    Select Case tname
+  Friend shared Function GetTypeSuffix(targetTypeSymbol AS ITypeSymbol) As String
+    dim typeName= targetTypeSymbol.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
+    Select Case typeName
            Case "Short"    : Return "S"
            Case "Integer"  : Return "I"
            Case "Long"     : Return "L"
