@@ -50,15 +50,11 @@ Public Class NumberSuffixCodeFixProvider
     If literal Is Nothing Then Return document
     Dim parentOfLiteral = literal.Parent
     If parentOfLiteral Is Nothing Then Return document
-    dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
-    If parentBinaryExpression Is Nothing Then Return document
     Dim semanticModel =await document.GetSemanticModelAsync(cancellationToken) 
     If semanticModel is Nothing Then Return document
     Dim targetTypeInfo as TypeInfo
-    If parentBinaryExpression.Left.Equals(literal) Then
-       targetTypeInfo = semanticModel.GetTypeInfo(parentBinaryExpression.Right, cancellationToken)
-    Elseif parentBinaryExpression.Right.Equals(literal) Then
-       targetTypeInfo = semanticModel.GetTypeInfo(parentBinaryExpression.Left, cancellationToken)
+    If NumberSuffixAnalyzer.TryGetTypeFromParentBinaryExpression(parentOfLiteral,literal,semanticModel,cancellationToken,targetTypeInfo) Then
+    ElseIf NumberSuffixAnalyzer.TryGetTypeInfoFromParentAssignment(parentOfLiteral,semanticModel,cancellationToken, targetTypeInfo) Then
     Else
       Return document
     End If
