@@ -54,28 +54,61 @@ End Module"
 
       Dim test = "
 Module Module1
-  Function m() As Integer
-    Dim fraction As Integer = 1
+  Function m() As UInteger
+    Dim fraction As UInteger = 1UI
     Return fraction + 1
   End Function
 End Module"
       Dim expected = New DiagnosticResult With {.Id = "NumberSuffix",
-          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UL"),
-          .Severity = DiagnosticSeverity.Warning}
+          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UI"),
+          .Severity = DiagnosticSeverity.Warning,
+          .Locations = New DiagnosticResultLocation() {
+                  New DiagnosticResultLocation("Test0.vb", 5, 23)
+              }}
 
 
       VerifyBasicDiagnostic(test, expected)
 
       Dim fixtest = "
 Module Module1
-  Function m() As Integer
-    Dim fraction As Integer = 1
-    Return fraction + 1
+  Function m() As UInteger
+    Dim fraction As UInteger = 1UI
+    Return fraction + 1UI
   End Function
 End Module"
       VerifyBasicFix(test, fixtest)
     End Sub
 
+        <TestMethod>
+    Public Sub TestMethod4()
+
+      Dim test = "
+Module Module1
+  Function m() As Integer
+    Dim fraction As UInteger = 0UI
+    fraction += 1
+    Return fraction
+  End Function
+End Module"
+      Dim expected = New DiagnosticResult With {.Id = "NumberSuffix",
+          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UI"),
+          .Severity = DiagnosticSeverity.Warning,
+          .Locations = New DiagnosticResultLocation() {
+                  New DiagnosticResultLocation("Test0.vb", 5, 17)
+              }}
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Integer
+    Dim fraction As UInteger = 0UI
+    fraction += 1UI
+    Return fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
     Protected Overrides Function GetBasicCodeFixProvider() As CodeFixProvider
       Return New NumberSuffixCodeFixProvider()
     End Function

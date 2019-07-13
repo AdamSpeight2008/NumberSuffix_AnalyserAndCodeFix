@@ -42,29 +42,28 @@ Public Class NumberSuffixAnalyzer
     Dim literalTypeInfo = context.SemanticModel.GetTypeInfo(literal, context.CancellationToken )
     if literalTypeInfo.ConvertedType.GetType.Equals(literalTypeInfo.Type) Then exit Sub
     Dim parentOfLiteral = literal.Parent
-    If parentOfLiteral Is Nothing Then exit Sub
-    dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
-    If parentBinaryExpression Is Nothing THen Exit Sub
     Dim targetTypeInfo as TypeInfo
-    If parentBinaryExpression.Left.Equals(literal) Then
-       targetTypeInfo = context.SemanticModel.GetTypeInfo(parentBinaryExpression.Right, context.CancellationToken)
-    Elseif parentBinaryExpression.Right.Equals(literal) Then
-      targetTypeInfo =  context.SemanticModel.GetTypeInfo(parentBinaryExpression.Left, context.CancellationToken)
+    If parentOfLiteral Is Nothing Then Return
+    If TryGetTypeFromParentBinaryExpression(parentOfLiteral,literal,context.SemanticModel,context.CancellationToken,targetTypeInfo) Then
+    ElseIf TryGetTypeInfoFromParentAssignment(parentOfLiteral, context.SemanticModel, context.CancellationToken, targetTypeInfo) Then
     Else
-      return
+      exit Sub
     End If
+    
     If targetTypeInfo.Type.Equals(literalTypeInfo.Type) THen Exit sub
     Dim typeSuffix = GetTypeSuffix( targetTypeInfo.Type)
     If typeSuffix Is Nothing Then Exit Sub
     Dim diag = Diagnostic.Create(Rule, literal.GetLocation, typeSuffix)
     context.ReportDiagnostic(diag)
   End Sub
- private Function HasTypeSuffix(literalToken As SyntaxToken) as Boolean
+
+  private Function HasTypeSuffix(literalToken As SyntaxToken) as Boolean
     Dim literalSuffix = literalToken.Text.ToUpperInvariant()
     Return literalSuffix.EndsWith("S")  OrElse literalSuffix.EndsWith("I")  OrElse literalSuffix.EndsWith("L")  OrElse
            literalSuffix.EndsWith("D")  OrElse literalSuffix.EndsWith("F")  OrElse literalSuffix.EndsWith("R")  OrElse
            literalSuffix.EndsWith("US") OrElse literalSuffix.EndsWith("UI") OrElse literalSuffix.EndsWith("UL")
   End Function
+
   Friend shared Function GetTypeSuffix(targetTypeSymbol AS ITypeSymbol) As String
     dim typeName= targetTypeSymbol.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
     Select Case typeName
@@ -80,4 +79,45 @@ Public Class NumberSuffixAnalyzer
      End Select
     Return Nothing
   End Function
+
+  Friend Shared Function TryGetTypeFromParentBinaryExpression(parentOfLiteral As SyntaxNode ,
+                                                              literal as LiteralExpressionSyntax,
+                                                            sm as SemanticModel,
+                                                            ct As CancellationToken,
+                                                      byref targetTypeInfo As TypeInfo) As Boolean 
+           Dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
+       If parentBinaryExpression Is Nothing Then Return false
+       If parentBinaryExpression.Left.Equals(literal) Then
+          targetTypeInfo = sm.GetTypeInfo(parentBinaryExpression.Right, ct)
+       Elseif parentBinaryExpression.Right.Equals(literal) Then
+          targetTypeInfo =  sm.GetTypeInfo(parentBinaryExpression.Left, ct)
+       Else
+         Return false
+       End If 
+    return true
+  End Function
+
+  Friend Shared Function TryGetTypeInfoFromParentAssignment(parentOfLiteral As SyntaxNode ,
+                                                            sm as SemanticModel,
+                                                            ct As CancellationToken,
+                                                      byref targetTypeInfo As TypeInfo) As Boolean
+    Dim parentAssignment = TryCast(parentOfLiteral, AssignmentStatementSyntax)
+    If parentAssignment Is Nothing Then Return False
+    If parentAssignment.Left Is Nothing Then Return False ' += 1; eg no assignment target.
+    Select Case parentAssignment.Kind
+           Case SyntaxKind.AddAssignmentStatement,
+                SyntaxKind.SubtractAssignmentStatement,
+                SyntaxKind.DivideAssignmentStatement,
+                SyntaxKind.IntegerDivideAssignmentStatement,
+                SyntaxKind.MultiplyAssignmentStatement,
+                SyntaxKind.ConcatenateAssignmentStatement,
+                SyntaxKind.ExponentiateAssignmentStatement,
+                syntaxkind.LeftShiftAssignmentStatement,
+                SyntaxKind.RightShiftAssignmentStatement
+           Case Else
+                Return False
+      End Select
+      targetTypeInfo = sm.GetTypeInfo(parentAssignment.Left, ct)
+      Return True
+    End Function
 End Class
