@@ -52,7 +52,7 @@ Public Class NumberSuffixAnalyzer
     If targetTypeInfo.Type.Equals(literalTypeInfo.Type) THen Exit sub
     Dim typeSuffix = GetTypeSuffix( targetTypeInfo.Type)
     If typeSuffix Is Nothing Then Exit Sub
-    Dim diag = Diagnostic.Create(Rule, literal.GetLocation, typeSuffix)
+    Dim diag = Diagnostic.Create(Rule, literal.GetLocation, targetTypeInfo.Type, literalTypeInfo.Type, typeSuffix)
     context.ReportDiagnostic(diag)
   End Sub
 

@@ -122,7 +122,7 @@
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
   <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>Do you want to add the type suffix '{0}'?</value>
+    <value>Target type is {0} and Source type is {1}. Do you want to add the type suffix '{2}' to make the Source type {0}?</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
   <data name="AnalyzerTitle" xml:space="preserve">
