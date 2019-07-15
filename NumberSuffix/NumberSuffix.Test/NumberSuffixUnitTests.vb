@@ -41,7 +41,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UL"),
+                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 24)}
                         }    
@@ -70,7 +70,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UL"),
+                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }    
@@ -101,7 +101,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UL"),
+                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -136,7 +136,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UI"),
+                          .Message =$"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -166,7 +166,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UI"),
+                          .Message = $"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -195,7 +195,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "UI"),
+                          .Message = $"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
@@ -229,7 +229,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "US"),
+                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -259,7 +259,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "US"),
+                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -288,7 +288,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "US"),
+                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
@@ -320,7 +320,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "L"),
+                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 24)}
                         }    
@@ -349,7 +349,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "L"),
+                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }    
@@ -380,7 +380,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "L"),
+                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -479,7 +479,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "S"),
+                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -509,7 +509,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "S"),
+                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -538,7 +538,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "S"),
+                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
@@ -572,7 +572,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -602,7 +602,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -631,7 +631,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
@@ -665,7 +665,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -695,7 +695,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -724,7 +724,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
@@ -758,7 +758,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
                         }
@@ -788,7 +788,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
                         }
@@ -817,7 +817,7 @@ Module Module1
 End Module"
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
                           .Severity = DiagnosticSeverity.Warning,
                           .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
                         }
