@@ -21,7 +21,7 @@ Namespace NumberSuffix.Test
     End Function
 #End Region
 
-    <TestMethod>
+<TestMethod>
     Public Sub Test_Empty()
       'No diagnostics expected to show up
       Dim test = ""
@@ -464,7 +464,7 @@ End Module"
 
 #End Region
 
-#Region "UShort Tests"
+#Region "Short Tests"
 
     <TestMethod, TestCategory("Short")>
     Public Sub Test_Short_CompoundAssignment()
@@ -550,6 +550,285 @@ Module Module1
   Function m() As Short
     Dim fraction As Short = 1S
     Return 1S + fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+#End Region
+
+#Region "Decimal Tests"
+
+    <TestMethod, TestCategory("Decimal")>
+    Public Sub Test_Decimal_CompoundAssignment()
+
+      Dim test = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 0D
+    fraction += 1
+    Return fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 0D
+    fraction += 1D
+    Return fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Decimal")>
+    Public Sub Test_Decimal_Operator_Right()
+
+      Dim test = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 1D
+    Return fraction + 1
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 1D
+    Return fraction + 1D
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Decimal")>
+    Public Sub Test_Decimal_Operator_Left()
+
+      Dim test = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 1D
+    Return 1 + fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "D"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Decimal
+    Dim fraction As Decimal = 1D
+    Return 1D + fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+#End Region
+    
+#Region "Double Tests"
+
+    <TestMethod, TestCategory("Double")>
+    Public Sub Test_Double_CompoundAssignment()
+
+      Dim test = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 0R
+    fraction += 1
+    Return fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 0R
+    fraction += 1R
+    Return fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Double")>
+    Public Sub Test_Double_Operator_Right()
+
+      Dim test = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 1R
+    Return fraction + 1
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 1R
+    Return fraction + 1R
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Double")>
+    Public Sub Test_Double_Operator_Left()
+
+      Dim test = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 1R
+    Return 1 + fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "R"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Double
+    Dim fraction As Double = 1R
+    Return 1R + fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+#End Region
+
+#Region "Single Tests"
+
+    <TestMethod, TestCategory("Single")>
+    Public Sub Test_Single_CompoundAssignment()
+
+      Dim test = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 0F
+    fraction += 1
+    Return fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 0F
+    fraction += 1F
+    Return fraction
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Single")>
+    Public Sub Test_Single_Operator_Right()
+
+      Dim test = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 1F
+    Return fraction + 1
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 1F
+    Return fraction + 1F
+  End Function
+End Module"
+      VerifyBasicFix(test, fixtest)
+    End Sub
+
+    <TestMethod, TestCategory("Single")>
+    Public Sub Test_Single_Operator_Left()
+
+      Dim test = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 1F
+    Return 1 + fraction
+  End Function
+End Module"
+      Dim expected As New DiagnosticResult With
+                        { .Id = "NumberSuffix",
+                          .Message = String.Format("Do you want to add the type suffix '{0}'?", "F"),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
+                        }
+
+      VerifyBasicDiagnostic(test, expected)
+
+      Dim fixtest = "
+Module Module1
+  Function m() As Single
+    Dim fraction As Single = 1F
+    Return 1F + fraction
   End Function
 End Module"
       VerifyBasicFix(test, fixtest)
