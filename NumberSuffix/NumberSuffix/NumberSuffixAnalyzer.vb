@@ -35,8 +35,7 @@ Public Class NumberSuffixAnalyzer
 
   Private Sub Analyze(context As SyntaxNodeAnalysisContext)
     Dim literal = TryCast( context.Node, LiteralExpressionSyntax)
-    If literal Is Nothing Then Exit Sub
-    If literal.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
+    If literal Is Nothing OrElse literal.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
     Dim tokenFromLiteral =literal.Token
     If HasTypeSuffix(tokenFromLiteral) Then Return
     Dim literalTypeInfo = context.SemanticModel.GetTypeInfo(literal, context.CancellationToken )
@@ -82,10 +81,11 @@ Public Class NumberSuffixAnalyzer
 
   Friend Shared Function TryGetTypeFromParentBinaryExpression(parentOfLiteral As SyntaxNode ,
                                                               literal as LiteralExpressionSyntax,
-                                                            sm as SemanticModel,
-                                                            ct As CancellationToken,
-                                                      byref targetTypeInfo As TypeInfo) As Boolean 
-           Dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
+                                                              sm as SemanticModel,
+                                                              ct As CancellationToken,
+                                                        byref targetTypeInfo As TypeInfo
+                                                        ) As Boolean
+       Dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
        If parentBinaryExpression Is Nothing Then Return false
        If parentBinaryExpression.Left.Equals(literal) Then
           targetTypeInfo = sm.GetTypeInfo(parentBinaryExpression.Right, ct)
@@ -102,8 +102,7 @@ Public Class NumberSuffixAnalyzer
                                                             ct As CancellationToken,
                                                       byref targetTypeInfo As TypeInfo) As Boolean
     Dim parentAssignment = TryCast(parentOfLiteral, AssignmentStatementSyntax)
-    If parentAssignment Is Nothing Then Return False
-    If parentAssignment.Left Is Nothing Then Return False ' += 1; eg no assignment target.
+    If parentAssignment Is Nothing OrElse parentAssignment.Left Is Nothing Then Return False ' += 1; eg no assignment target.
     Select Case parentAssignment.Kind
            Case SyntaxKind.AddAssignmentStatement,
                 SyntaxKind.SubtractAssignmentStatement,
