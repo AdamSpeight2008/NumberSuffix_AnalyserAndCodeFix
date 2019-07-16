@@ -1,18 +1,12 @@
 ﻿Option Strict On
-Imports System
-Imports System.Collections.Generic
 Imports System.Collections.Immutable
 Imports System.Composition
-Imports System.Linq
 Imports System.Threading
-Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CodeFixes
 Imports Microsoft.CodeAnalysis.CodeActions
 Imports Microsoft.CodeAnalysis.VisualBasic
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
-Imports Microsoft.CodeAnalysis.Rename
-Imports Microsoft.CodeAnalysis.Text
 
 <ExportCodeFixProvider(LanguageNames.VisualBasic, Name:=NameOf(NumberSuffixCodeFixProvider)), [Shared]>
 Public Class NumberSuffixCodeFixProvider
@@ -38,35 +32,31 @@ Public Class NumberSuffixCodeFixProvider
     Dim declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType(Of LiteralExpressionSyntax)().First()
     ' Register a code action that will invoke the fix.
     context.RegisterCodeFix(
-        CodeAction.Create(
-            title:=title,
-            createChangedDocument:=Function(c) ApplyFix(context.Document, declaration, c),
-            equivalenceKey:=title),
-        diagnostic)
+      CodeAction.Create(
+                      title:=title,
+      createChangedDocument:=Function(c) ApplyFix(context.Document, declaration, c),
+             equivalenceKey:=title), diagnostic)
   End Function
 
   Private Async Function ApplyFix(document As Document, literal As LiteralExpressionSyntax, cancellationToken As CancellationToken) As Task(Of Document)
-    If literal Is Nothing Then Return document
-    Dim parentOfLiteral = literal.Parent
-    If parentOfLiteral Is Nothing Then Return document
-    Dim semanticModel =await document.GetSemanticModelAsync(cancellationToken) 
-    If semanticModel is Nothing Then Return document
-    Dim targetTypeInfo as TypeInfo
-    If NumberSuffixAnalyzer.TryGetTypeFromParentBinaryExpression(parentOfLiteral,literal,semanticModel,cancellationToken,targetTypeInfo) Then
-    ElseIf NumberSuffixAnalyzer.TryGetTypeInfoFromParentAssignment(parentOfLiteral,semanticModel,cancellationToken, targetTypeInfo) Then
-    Else
-      Return document
-    End If
-    Dim typeSuffix = NumberSuffixAnalyzer.GetTypeSuffix(targetTypeInfo.Type)
-    If typeSuffix Is Nothing Then Return document
+    If literal Is Nothing OrElse literal.Parent Is Nothing Then Return document
+
+    Dim semanticModel = Await document.GetSemanticModelAsync(cancellationToken)
+    If semanticModel Is Nothing Then Return document
+
+    Dim targetTypeInfo As TypeInfo
+    If NumberSuffixAnalyzer.TryGetTypeFromParentBinaryExpression(literal.Parent, literal, semanticModel, cancellationToken, targetTypeInfo).NOR(
+       NumberSuffixAnalyzer.TryGetTypeInfoFromParentAssignment(literal.Parent, semanticModel, cancellationToken, targetTypeInfo)) Then Return document
+
+    Dim typeSuffix As String = Nothing
+    If Not NumberSuffixAnalyzer.TryGetTypeSuffix(targetTypeInfo.Type, typeSuffix) Then Return document
     Dim oldTree = Await document.GetSyntaxTreeAsync
     If oldTree Is Nothing Then Return document
     Dim oldRoot = Await oldTree.GetRootAsync(cancellationToken)
     If oldRoot Is Nothing Then Return document
-    Dim newLiteral = SyntaxFactory.ParseExpression(literal.Token.ValueText & typeSuffix).
-                       WithLeadingTrivia(literal.GetLeadingTrivia).
-                       WithTrailingTrivia(literal.GetTrailingTrivia)
-    Dim newRoot = oldRoot.ReplaceNode(literal,newLiteral)
+    Dim newLiteral = SyntaxFactory.ParseExpression(literal.Token.ValueText & typeSuffix).WithTriviaFrom(literal)
+    Dim newRoot = oldRoot.ReplaceNode(literal, newLiteral)
     Return document.WithSyntaxRoot(newRoot)
   End Function
+
 End Class
