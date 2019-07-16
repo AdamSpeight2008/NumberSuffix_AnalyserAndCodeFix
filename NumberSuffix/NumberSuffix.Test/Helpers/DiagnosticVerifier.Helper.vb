@@ -4,7 +4,7 @@ Imports Microsoft.CodeAnalysis.Diagnostics
 Imports Microsoft.CodeAnalysis.Text
 Imports System.Collections.Immutable
 
-Namespace TestHelper
+Namespace Test.TestHelper
 
   ' Class for turning strings into documents And getting the diagnostics on them. 
   ' All methods are Shared.

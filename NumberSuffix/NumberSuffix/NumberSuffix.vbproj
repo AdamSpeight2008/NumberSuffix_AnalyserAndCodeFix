@@ -20,6 +20,7 @@
     <Copyright>Copyright 2019</Copyright>
     <PackageTags>NumberSuffix, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
+    <RootNamespace>AdamSpeight.NumberSuffix</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

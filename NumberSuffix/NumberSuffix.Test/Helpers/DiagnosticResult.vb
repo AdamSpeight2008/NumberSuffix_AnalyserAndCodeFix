@@ -1,6 +1,6 @@
 ﻿Imports Microsoft.CodeAnalysis
 
-Namespace TestHelper
+Namespace Test.TestHelper
 
   ''' <summary>
   ''' Location where the diagnostic appears, as determined by path, line number, And column number.
