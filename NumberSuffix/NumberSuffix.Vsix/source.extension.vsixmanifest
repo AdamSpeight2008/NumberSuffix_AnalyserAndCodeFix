@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="NumberSuffix..315fa005-cbbf-4c86-9194-57788239da10" Version="1.5" Language="en-US" Publisher="Adam Speight"/>
+        <Identity Id="NumberSuffix..315fa005-cbbf-4c86-9194-57788239da10" Version="1.51" Language="en-US" Publisher="Adam Speight"/>
         <DisplayName>NumberSuffix</DisplayName>
         <Description xml:space="preserve">Number suffix analyser and codefix.</Description>
         <MoreInfo>https://github.com/AdamSpeight2008/NumberSuffix_AnalyserAndCodeFix</MoreInfo>
-        <ReleaseNotes>Improving the diagnostic, by not making a question. Updated and simplified unittests.</ReleaseNotes>
+        <ReleaseNotes>Fix null reference issue.</ReleaseNotes>
         <PreviewImage>NumberSuffixAnalyser3.png</PreviewImage>
         <Tags>TypeSuffix</Tags>
         <Preview>true</Preview>

@@ -7,6 +7,18 @@ Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.VisualBasic
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports Microsoft.CodeAnalysis.Diagnostics
+Imports System.Runtime.CompilerServices
+
+<Assembly: InternalsVisibleTo("NumberSuffix.Test")>
+
+Friend Module Exts
+
+  <Extension>
+  Function NOR(b0 As Boolean, b1 As Boolean) As Boolean
+    Return Not (b0 OrElse b1)
+  End Function
+
+End Module
 
 <DiagnosticAnalyzer(LanguageNames.VisualBasic)>
 Public Class NumberSuffixAnalyzer
@@ -14,16 +26,13 @@ Public Class NumberSuffixAnalyzer
 
   Friend Const DiagnosticId = "NumberSuffix"
   Friend Const Category = "Naming"
-
-  ' You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
-  ' See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
-   Shared ReadOnly Title As New LocalizableResourceString(NameOf(My.Resources.AnalyzerTitle), My.Resources.ResourceManager, GetType(My.Resources.Resources))
-   Shared ReadOnly MessageFormat As New LocalizableResourceString(NameOf(My.Resources.AnalyzerMessageFormat), My.Resources.ResourceManager, GetType(My.Resources.Resources))
-   Shared ReadOnly Description As New LocalizableResourceString(NameOf(My.Resources.AnalyzerDescription), My.Resources.ResourceManager, GetType(My.Resources.Resources))
-   Shared ReadOnly Rule As New DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault:=True, description:=Description)
+  Friend Shared ReadOnly MessageFormat As New LocalizableResourceString(NameOf(My.Resources.AnalyzerMessageFormat), My.Resources.ResourceManager, GetType(My.Resources.Resources))
+  Shared ReadOnly Title As New LocalizableResourceString(NameOf(My.Resources.AnalyzerTitle), My.Resources.ResourceManager, GetType(My.Resources.Resources))
+  Shared ReadOnly Description As New LocalizableResourceString(NameOf(My.Resources.AnalyzerDescription), My.Resources.ResourceManager, GetType(My.Resources.Resources))
+  Shared ReadOnly Rule As New DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault:=True, description:=Description)
 
   Public Function MessageFormatted() As String
-    REturn MessageFormat.ToString
+    Return MessageFormat.ToString
   End Function
 
   Public Overrides ReadOnly Property SupportedDiagnostics As ImmutableArray(Of DiagnosticDescriptor)
@@ -37,73 +46,64 @@ Public Class NumberSuffixAnalyzer
   End Sub
 
   Private Sub Analyze(context As SyntaxNodeAnalysisContext)
-    Dim literal = TryCast( context.Node, LiteralExpressionSyntax)
-    If literal Is Nothing OrElse literal.Kind <> SyntaxKind.NumericLiteralExpression Then Exit Sub
-    Dim tokenFromLiteral =literal.Token
-    If HasTypeSuffix(tokenFromLiteral) Then Return
-    Dim literalTypeInfo = context.SemanticModel.GetTypeInfo(literal, context.CancellationToken )
-    if literalTypeInfo.ConvertedType.GetType.Equals(literalTypeInfo.Type) Then exit Sub
-    Dim parentOfLiteral = literal.Parent
-    Dim targetTypeInfo as TypeInfo
-    If parentOfLiteral Is Nothing Then Return
-    If TryGetTypeFromParentBinaryExpression(parentOfLiteral,literal,context.SemanticModel,context.CancellationToken,targetTypeInfo) Then
-    ElseIf TryGetTypeInfoFromParentAssignment(parentOfLiteral, context.SemanticModel, context.CancellationToken, targetTypeInfo) Then
-    Else
-      exit Sub
-    End If
-    
-    If targetTypeInfo.Type.Equals(literalTypeInfo.Type) THen Exit sub
-    Dim typeSuffix = GetTypeSuffix( targetTypeInfo.Type)
-    If typeSuffix Is Nothing Then Exit Sub
-    Dim diag = Diagnostic.Create(Rule, literal.GetLocation, targetTypeInfo.Type, literalTypeInfo.Type, typeSuffix)
-    context.ReportDiagnostic(diag)
+    Dim literal = TryCast(context.Node, LiteralExpressionSyntax)
+    Dim targetTypeInfo As TypeInfo
+    Dim typeSuffix As String = Nothing
+    Dim literalTypeInfo As TypeInfo
+    If literal Is Nothing OrElse literal.Kind <> SyntaxKind.NumericLiteralExpression OrElse HasTypeSuffix(literal.Token) Then Return
+
+    literalTypeInfo = context.SemanticModel.GetTypeInfo(literal, context.CancellationToken)
+    If literalTypeInfo.ConvertedType.GetType.Equals(literalTypeInfo.Type) Then Return
+    If literal.Parent Is Nothing Then Return
+    If TryGetTypeFromParentBinaryExpression(literal.Parent, literal, context.SemanticModel, context.CancellationToken, targetTypeInfo).NOR(
+       TryGetTypeInfoFromParentAssignment(literal.Parent, context.SemanticModel, context.CancellationToken, targetTypeInfo)) Then Return
+    If targetTypeInfo.Type.Equals(literalTypeInfo.Type) Then Return
+    If Not TryGetTypeSuffix(targetTypeInfo.Type, typeSuffix) Then Return
+    context.ReportDiagnostic(Diagnostic.Create(Rule, literal.GetLocation, targetTypeInfo.Type, literalTypeInfo.Type, typeSuffix))
   End Sub
 
-  private Function HasTypeSuffix(literalToken As SyntaxToken) as Boolean
+  Private Function HasTypeSuffix(literalToken As SyntaxToken) As Boolean
     Dim literalSuffix = literalToken.Text.ToUpperInvariant()
     Return literalSuffix.EndsWith("S")  OrElse literalSuffix.EndsWith("I")  OrElse literalSuffix.EndsWith("L")  OrElse
            literalSuffix.EndsWith("D")  OrElse literalSuffix.EndsWith("F")  OrElse literalSuffix.EndsWith("R")  OrElse
            literalSuffix.EndsWith("US") OrElse literalSuffix.EndsWith("UI") OrElse literalSuffix.EndsWith("UL")
   End Function
 
-  Friend shared Function GetTypeSuffix(targetTypeSymbol AS ITypeSymbol) As String
-    dim typeName= targetTypeSymbol.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
+  Friend Shared Function TryGetTypeSuffix(targetTypeSymbol As ITypeSymbol, ByRef typeSuffix As String) As Boolean
+    Dim typeName = targetTypeSymbol.ToDisplayString(SymbolDisplayFormat.VisualBasicErrorMessageFormat)
     Select Case typeName
-           Case "Short"    : Return "S"
-           Case "Integer"  : Return "I"
-           Case "Long"     : Return "L"
-           Case "Decimal"  : Return "D"
-           Case "Single"   : Return "F"
-           Case "Double"   : Return "R"
-           Case "UShort"   : Return "US"
-           Case "UInteger" : Return "UI"
-           Case "ULong"    : Return "UL"
-     End Select
-    Return Nothing
+           Case "Short"    : typeSuffix = "S"
+           Case "Integer"  : typeSuffix = "I"
+           Case "Long"     : typeSuffix = "L"
+           Case "Decimal"  : typeSuffix = "D"
+           Case "Single"   : typeSuffix = "F"
+           Case "Double"   : typeSuffix = "R"
+           Case "UShort"   : typeSuffix = "US"
+           Case "UInteger" : typeSuffix = "UI"
+           Case "ULong"    : typeSuffix = "UL"
+           Case Else       : typeSuffix = Nothing
+    End Select
+    Return typeSuffix IsNot Nothing
   End Function
 
-  Friend Shared Function TryGetTypeFromParentBinaryExpression(parentOfLiteral As SyntaxNode ,
-                                                              literal as LiteralExpressionSyntax,
-                                                              sm as SemanticModel,
+  Friend Shared Function TryGetTypeFromParentBinaryExpression(parentOfLiteral As SyntaxNode,
+                                                              literal As LiteralExpressionSyntax,
+                                                              sm As SemanticModel,
                                                               ct As CancellationToken,
-                                                        byref targetTypeInfo As TypeInfo
-                                                        ) As Boolean
-       Dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
-       If parentBinaryExpression Is Nothing Then Return false
-       If parentBinaryExpression.Left.Equals(literal) Then
-          targetTypeInfo = sm.GetTypeInfo(parentBinaryExpression.Right, ct)
-       Elseif parentBinaryExpression.Right.Equals(literal) Then
-          targetTypeInfo =  sm.GetTypeInfo(parentBinaryExpression.Left, ct)
-       Else
-         Return false
-       End If 
-    return true
+                                                        ByRef targetTypeInfo As TypeInfo
+                                                            ) As Boolean
+    Dim parentBinaryExpression = TryCast(parentOfLiteral, BinaryExpressionSyntax)
+    If parentBinaryExpression Is Nothing Then Return False
+    If parentBinaryExpression.Left.Equals(literal)  Then targetTypeInfo = sm.GetTypeInfo(parentBinaryExpression.Right, ct)  : Return True
+    IF parentBinaryExpression.Right.Equals(literal) Then targetTypeInfo = sm.GetTypeInfo(parentBinaryExpression.Left, ct)   : Return True
+    Return False
   End Function
 
-  Friend Shared Function TryGetTypeInfoFromParentAssignment(parentOfLiteral As SyntaxNode ,
-                                                            sm as SemanticModel,
+  Friend Shared Function TryGetTypeInfoFromParentAssignment(parentOfLiteral As SyntaxNode,
+                                                            sm As SemanticModel,
                                                             ct As CancellationToken,
-                                                      byref targetTypeInfo As TypeInfo) As Boolean
+                                                      ByRef targetTypeInfo As TypeInfo
+                                                          ) As Boolean
     Dim parentAssignment = TryCast(parentOfLiteral, AssignmentStatementSyntax)
     If parentAssignment Is Nothing OrElse parentAssignment.Left Is Nothing Then Return False ' += 1; eg no assignment target.
     Select Case parentAssignment.Kind
@@ -114,12 +114,13 @@ Public Class NumberSuffixAnalyzer
                 SyntaxKind.MultiplyAssignmentStatement,
                 SyntaxKind.ConcatenateAssignmentStatement,
                 SyntaxKind.ExponentiateAssignmentStatement,
-                syntaxkind.LeftShiftAssignmentStatement,
+                SyntaxKind.LeftShiftAssignmentStatement,
                 SyntaxKind.RightShiftAssignmentStatement
            Case Else
-                Return False
-      End Select
-      targetTypeInfo = sm.GetTypeInfo(parentAssignment.Left, ct)
-      Return True
-    End Function
+                targetTypeInfo = Nothing : Return False
+    End Select
+    targetTypeInfo = sm.GetTypeInfo(parentAssignment.Left, ct)
+    Return True
+  End Function
+
 End Class

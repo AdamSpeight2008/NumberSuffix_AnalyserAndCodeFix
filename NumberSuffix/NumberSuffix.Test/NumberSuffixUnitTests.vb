@@ -25,7 +25,7 @@ Namespace Test
 #End Region
 
     Shared Friend Function MakeDiagnosticMessage(targetType, sourceType, typeSuffix) As String
-      Return String.Format(s_Analyzer.MessageFormatted.ToString,targetType, sourceType, typeSuffix )
+      Return String.Format(NumberSuffixAnalyzer.MessageFormat.ToString,targetType, sourceType, typeSuffix )
     End Function
 
     Private Function MakeTestSource_ForOperatorRight(typeName As String, typeSuffix As String) As String
@@ -68,28 +68,32 @@ Module Module1
 
     '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
     <DataTestMethod>
-    <DataRow("ULong"    ,"Integer", "UL"  ,5  ,12)>
-    <DataRow("UInteger" ,"Integer", "UI"  ,5  ,12)>
-    <DataRow("UShort"   ,"Integer", "US"  ,5  ,12)>
-    <DataRow("Long"     ,"Integer", "L"   ,5  ,12)>
-    <DataRow("Short"    ,"Integer", "S"   ,5  ,12)>
-    <DataRow("Decimal"  ,"Integer", "D"   ,5  ,12)>
-    <DataRow("Double"   ,"Integer", "R"   ,5  ,12)>
-    <DataRow("Single"   ,"Integer", "F"   ,5  ,12)>
-    Public Sub Test_Operator_Left(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
-      Dim test = MakeTestSource_ForOperatorLeft(targetTypeName,Nothing)
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = MakeDiagnosticMessage(targetTypeName,sourceTypeName,typeSuffix),
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", line, column)}
-                        }    
+    <DataRow("ULong", "Integer", "UL", 5, 12)>
+    <DataRow("UInteger", "Integer", "UI", 5, 12)>
+    <DataRow("UShort", "Integer", "US", 5, 12)>
+    <DataRow("Long", "Integer", "L", 5, 12)>
+    <DataRow("Short", "Integer", "S", 5, 12)>
+    <DataRow("Decimal", "Integer", "D", 5, 12)>
+    <DataRow("Double", "Integer", "R", 5, 12)>
+    <DataRow("Single", "Integer", "F", 5, 12)>
+    Public Sub Test_Operator_Left(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer)
+      Dim test = MakeTestSource_ForOperatorLeft(targetTypeName, Nothing)
+      Dim expected = MakeDiagnosticResult(targetTypeName, sourceTypeName, typeSuffix, line, column)
       VerifyBasicDiagnostic(test, expected)
       Dim fixtest = MakeTestSource_ForOperatorLeft(targetTypeName, typeSuffix)
       VerifyBasicFix(test, fixtest)
     End Sub
 
-   '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
+    Private Shared Function MakeDiagnosticResult(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer) As DiagnosticResult
+      Return New DiagnosticResult With
+                        {.Id = "NumberSuffix",
+                          .Message = MakeDiagnosticMessage(targetTypeName, sourceTypeName, typeSuffix),
+                          .Severity = DiagnosticSeverity.Warning,
+                          .Locations = {New DiagnosticResultLocation("Test0.vb", line, column)}
+                        }
+    End Function
+
+    '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
     <DataTestMethod>
     <DataRow("ULong"    ,"Integer", "UL"  ,5  ,24)>
     <DataRow("UInteger" ,"Integer", "UI"  ,5  ,24)>
@@ -101,12 +105,7 @@ Module Module1
     <DataRow("Single"   ,"Integer", "F"   ,5  ,24)>
     Public Sub Test_Operator_Right(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
       Dim test = MakeTestSource_ForOperatorRight(targetTypeName,Nothing)
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = MakeDiagnosticMessage(targetTypeName,sourceTypeName,typeSuffix),
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", line, column)}
-                        }    
+      Dim expected = MakeDiagnosticResult(targetTypeName, sourceTypeName, typeSuffix, line, column)
       VerifyBasicDiagnostic(test, expected)
       Dim fixtest = MakeTestSource_ForOperatorRight(targetTypeName, typeSuffix)
       VerifyBasicFix(test, fixtest)
@@ -122,17 +121,10 @@ Module Module1
     <DataRow("Decimal"  ,"Integer"  ,"D"  ,5  ,17)>
     <DataRow("Double"   ,"Integer"  ,"R"  ,5  ,17)>
     <DataRow("Single"   ,"Integer"  ,"F"  ,5  ,17)>
-  Public Sub Test_CompoundAssignment(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
+  Public Sub Test_CompoundAssignment(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer)
       Dim test = MakeTestSource_ForCompoundAssignment(targetTypeName, typeSuffix, False)
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = MakeDiagnosticMessage(targetTypeName, sourceTypeName, typeSuffix),
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", line, column) }
-                        }
-
+      Dim expected = MakeDiagnosticResult(targetTypeName, sourceTypeName, typeSuffix, line, column)
       VerifyBasicDiagnostic(test, expected)
-
       Dim fixtest = MakeTestSource_ForCompoundAssignment(targetTypeName, typeSuffix, True)
       VerifyBasicFix(test, fixtest)
     End Sub
@@ -141,7 +133,7 @@ Module Module1
 
     <TestMethod, TestCategory("Integer")>
     Public Sub Test_Integer_CompoundAssignment()
-      Dim test = MakeTestSource_ForCompoundAssignment("Integer", "I", False)
+      Dim test = MakeTestSource_ForCompoundAssignment("Integer", "I", false)
       VerifyBasicDiagnostic(test)
     End Sub
 
