@@ -14,7 +14,6 @@ Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports Microsoft.CodeAnalysis.Rename
 Imports Microsoft.CodeAnalysis.Text
 
-
 <ExportCodeFixProvider(LanguageNames.VisualBasic, Name:=NameOf(NumberSuffixCodeFixProvider)), [Shared]>
 Public Class NumberSuffixCodeFixProvider
   Inherits CodeFixProvider

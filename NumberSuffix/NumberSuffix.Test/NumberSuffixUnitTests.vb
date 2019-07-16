@@ -1,25 +1,63 @@
-﻿Imports NumberSuffix
-Imports NumberSuffix.Test.TestHelper
+﻿Imports AdamSpeight.NumberSuffix
+Imports AdamSpeight.NumberSuffix.Test.TestHelper
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CodeFixes
 Imports Microsoft.CodeAnalysis.Diagnostics
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 
-Namespace NumberSuffix.Test
+Namespace Test
 
   <TestClass>
   Public Class UnitTest
     Inherits CodeFixVerifier
 
+    Private Shared ReadOnly s_Analyzer As New NumberSuffixAnalyzer()
+    Private Shared ReadOnly s_CodeFix  As New NumberSuffixCodeFixProvider()
+
 #Region "Overrides"
     Protected Overrides Function GetBasicCodeFixProvider() As CodeFixProvider
-      Return New NumberSuffixCodeFixProvider()
+      Return s_CodeFix
     End Function
 
     Protected Overrides Function GetBasicDiagnosticAnalyzer() As DiagnosticAnalyzer
-      Return New NumberSuffixAnalyzer()
+      Return s_Analyzer
     End Function
 #End Region
+
+    Shared Friend Function MakeDiagnosticMessage(targetType, sourceType, typeSuffix) As String
+      Return String.Format(s_Analyzer.MessageFormatted.ToString,targetType, sourceType, typeSuffix )
+    End Function
+
+    Private Function MakeTestSource_ForOperatorRight(typeName As String, typeSuffix As String) As String
+      Return $"
+Module Module1
+  Function m(m2 As {typeName}, mask As {typeName}) As Boolean
+    Dim fraction As {typeName} = m2 And mask
+    Return fraction <> 0{typeSuffix}
+  End Function
+End Module"
+    End Function
+
+    Private Function MakeTestSource_ForOperatorLeft(typeName As String, typeSuffix As String) As String
+      Return $"
+Module Module1
+  Function m(m2 As {typeName}, mask As {typeName}) As Boolean
+    Dim fraction As {typeName} = m2 And mask
+    Return 0{typeSuffix} <> fraction
+  End Function
+End Module"
+    End Function
+
+    Private Function MakeTestSource_ForCompoundAssignment(typeName As String, typeSuffix As String, fix As Boolean) As String
+      Return $"
+Module Module1
+  Function m() As {typeName}
+    Dim fraction As {typeName} = 0{typeSuffix}
+    fraction += 1{If(fix,typeSuffix,Nothing)}
+    Return fraction
+  End Function"
+    End Function
+
 
 <TestMethod>
     Public Sub Test_Empty()
@@ -28,810 +66,95 @@ Namespace NumberSuffix.Test
       VerifyBasicDiagnostic(test)
     End Sub
 
-#Region "ULong Tests"
-
-    <TestMethod, TestCategory("ULong")>
-    Public Sub Test_ULong_Operator_Right()
-      Dim test = "
-Module Module1
-  Function m(m2 As ULong, mask As ULong) As Boolean
-    Dim fraction As ULong = m2 And mask
-    Return fraction <> 0
-  End Function
-End Module"
+    '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
+    <DataTestMethod>
+    <DataRow("ULong"    ,"Integer", "UL"  ,5  ,12)>
+    <DataRow("UInteger" ,"Integer", "UI"  ,5  ,12)>
+    <DataRow("UShort"   ,"Integer", "US"  ,5  ,12)>
+    <DataRow("Long"     ,"Integer", "L"   ,5  ,12)>
+    <DataRow("Short"    ,"Integer", "S"   ,5  ,12)>
+    <DataRow("Decimal"  ,"Integer", "D"   ,5  ,12)>
+    <DataRow("Double"   ,"Integer", "R"   ,5  ,12)>
+    <DataRow("Single"   ,"Integer", "F"   ,5  ,12)>
+    Public Sub Test_Operator_Left(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
+      Dim test = MakeTestSource_ForOperatorLeft(targetTypeName,Nothing)
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
+                          .Message = MakeDiagnosticMessage(targetTypeName,sourceTypeName,typeSuffix),
                           .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 24)}
+                          .Locations = {New DiagnosticResultLocation("Test0.vb", line, column)}
                         }    
-
-
       VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m(m2 As ULong, mask As ULong) As Boolean
-    Dim fraction As ULong = m2 And mask
-    Return fraction <> 0UL
-  End Function
-End Module"
+      Dim fixtest = MakeTestSource_ForOperatorLeft(targetTypeName, typeSuffix)
       VerifyBasicFix(test, fixtest)
     End Sub
 
-    <TestMethod, TestCategory("ULong")>
-    Public Sub Test_ULong_Operator_Left()
-      Dim test = "
-Module Module1
-  Function m(m2 As ULong, mask As ULong) As Boolean
-    Dim fraction As ULong = m2 And mask
-    Return 0 <> fraction
-  End Function
-End Module"
+   '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
+    <DataTestMethod>
+    <DataRow("ULong"    ,"Integer", "UL"  ,5  ,24)>
+    <DataRow("UInteger" ,"Integer", "UI"  ,5  ,24)>
+    <DataRow("UShort"   ,"Integer", "US"  ,5  ,24)>
+    <DataRow("Long"     ,"Integer", "L"   ,5  ,24)>
+    <DataRow("Short"    ,"Integer", "S"   ,5  ,24)>
+    <DataRow("Decimal"  ,"Integer", "D"   ,5  ,24)>
+    <DataRow("Double"   ,"Integer", "R"   ,5  ,24)>
+    <DataRow("Single"   ,"Integer", "F"   ,5  ,24)>
+    Public Sub Test_Operator_Right(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
+      Dim test = MakeTestSource_ForOperatorRight(targetTypeName,Nothing)
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
+                          .Message = MakeDiagnosticMessage(targetTypeName,sourceTypeName,typeSuffix),
                           .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 12)}
+                          .Locations = {New DiagnosticResultLocation("Test0.vb", line, column)}
                         }    
-
-
       VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m(m2 As ULong, mask As ULong) As Boolean
-    Dim fraction As ULong = m2 And mask
-    Return 0UL <> fraction
-  End Function
-End Module"
+      Dim fixtest = MakeTestSource_ForOperatorRight(targetTypeName, typeSuffix)
       VerifyBasicFix(test, fixtest)
     End Sub
 
-    <TestMethod, TestCategory("ULong")>
-    Public Sub Test_UILong_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As ULong
-    Dim fraction As ULong = 0UL
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
+    '<DataRow(TargetType, SourceType, TypeSuffix, Line, Column)>
+    <DataTestMethod>
+    <DataRow("ULong"    ,"Integer"  ,"UL" ,5  ,17)>
+    <DataRow("UInteger" ,"Integer"  ,"UI" ,5  ,17)>
+    <DataRow("UShort"   ,"Integer"  ,"US" ,5  ,17)>
+    <DataRow("Long"     ,"Integer"  ,"L"  ,5  ,17)>
+    <DataRow("Short"    ,"Integer"  ,"S"  ,5  ,17)>
+    <DataRow("Decimal"  ,"Integer"  ,"D"  ,5  ,17)>
+    <DataRow("Double"   ,"Integer"  ,"R"  ,5  ,17)>
+    <DataRow("Single"   ,"Integer"  ,"F"  ,5  ,17)>
+  Public Sub Test_CompoundAssignment(targetTypeName As String, sourceTypeName As String, typeSuffix As String, line As Integer, column As Integer )
+      Dim test = MakeTestSource_ForCompoundAssignment(targetTypeName, typeSuffix, False)
       Dim expected As New DiagnosticResult With
                         { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"ULong"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UL"}' to make the Source type {"ULong"}?",
+                          .Message = MakeDiagnosticMessage(targetTypeName, sourceTypeName, typeSuffix),
                           .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
+                          .Locations = { New DiagnosticResultLocation("Test0.vb", line, column) }
                         }
 
       VerifyBasicDiagnostic(test, expected)
 
-      Dim fixtest = "
-Module Module1
-  Function m() As ULong
-    Dim fraction As ULong = 0UL
-    fraction += 1UL
-    Return fraction
-  End Function
-End Module"
+      Dim fixtest = MakeTestSource_ForCompoundAssignment(targetTypeName, typeSuffix, True)
       VerifyBasicFix(test, fixtest)
     End Sub
-
-#End Region
-
-#Region "UInteger Tests"
-
-    <TestMethod, TestCategory("UInteger")>
-    Public Sub Test_UInteger_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 0UI
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message =$"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 0UI
-    fraction += 1UI
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("UInteger")>
-    Public Sub Test_UInteger_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 1UI
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 1UI
-    Return fraction + 1UI
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("UInteger")>
-    Public Sub Test_UInteger_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 1UI
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"UInteger"} and Source type is {"Integer"}. Do you want to add the type suffix '{"UI"}' to make the Source type {"UInteger"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UInteger
-    Dim fraction As UInteger = 1UI
-    Return 1UI + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
-
-#Region "UShort Tests"
-
-    <TestMethod, TestCategory("UShort")>
-    Public Sub Test_UShort_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 0US
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 0US
-    fraction += 1US
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("UShort")>
-    Public Sub Test_UShort_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 1US
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 1US
-    Return fraction + 1US
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("UShort")>
-    Public Sub Test_UShort_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 1US
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"UShort"} and Source type is {"Integer"}. Do you want to add the type suffix '{"US"}' to make the Source type {"UShort"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As UShort
-    Dim fraction As UShort = 1US
-    Return 1US + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
-
-#Region "Long Tests"
-
-    <TestMethod, TestCategory("Long")>
-    Public Sub Test_Long_Operator_Right()
-      Dim test = "
-Module Module1
-  Function m(m2 As Long, mask As Long) As Boolean
-    Dim fraction As Long = m2 And mask
-    Return fraction <> 0
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 24)}
-                        }    
-
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m(m2 As Long, mask As Long) As Boolean
-    Dim fraction As Long = m2 And mask
-    Return fraction <> 0L
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Long")>
-    Public Sub Test_Long_Operator_Left()
-      Dim test = "
-Module Module1
-  Function m(m2 As Long, mask As Long) As Boolean
-    Dim fraction As Long = m2 And mask
-    Return 0 <> fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = {New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }    
-
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m(m2 As Long, mask As Long) As Boolean
-    Dim fraction As Long = m2 And mask
-    Return 0L <> fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Long")>
-    Public Sub Test_Long_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Long
-    Dim fraction As Long = 0L
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Long"} and Source type is {"Integer"}. Do you want to add the type suffix '{"L"}' to make the Source type {"Long"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Long
-    Dim fraction As Long = 0L
-    fraction += 1L
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
 
 #Region "Integer Tests"
 
     <TestMethod, TestCategory("Integer")>
     Public Sub Test_Integer_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Integer
-    Dim fraction As Integer = 0I
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-
+      Dim test = MakeTestSource_ForCompoundAssignment("Integer", "I", False)
       VerifyBasicDiagnostic(test)
-
     End Sub
 
     <TestMethod, TestCategory("Integer")>
     Public Sub Test_Integer_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As Integer
-    Dim fraction As Integer = 1I
-    Return fraction + 1
-  End Function
-End Module"
-      'Dim expected As New DiagnosticResult With
-      '                  { .Id = "NumberSuffix",
-      '                    .Message = String.Format("Do you want to add the type suffix '{0}'?", "I"),
-      '                    .Severity = DiagnosticSeverity.Warning,
-      '                    .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-      '                  }
-
+      Dim test = MakeTestSource_ForOperatorRight("Integer", "I")
       VerifyBasicDiagnostic(test)
-
-'      Dim fixtest = "
-'Module Module1
-'  Function m() As Integer
-'    Dim fraction As Integer = 1I
-'    Return fraction + 1I
-'  End Function
-'End Module"
-'      VerifyBasicFix(test)
     End Sub
 
     <TestMethod, TestCategory("Integer")>
     Public Sub Test_Integer_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As Integer
-    Dim fraction As Integer = 1I
-    Return 1 + fraction
-  End Function
-End Module"
-
+      Dim test = MakeTestSource_ForOperatorLeft("Integer", "I")
       VerifyBasicDiagnostic(test)
-
-    End Sub
-
-#End Region
-
-#Region "Short Tests"
-
-    <TestMethod, TestCategory("Short")>
-    Public Sub Test_Short_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 0S
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 0S
-    fraction += 1S
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Short")>
-    Public Sub Test_Short_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 1S
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 1S
-    Return fraction + 1S
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Short")>
-    Public Sub Test_Short_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 1S
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Short"} and Source type is {"Integer"}. Do you want to add the type suffix '{"S"}' to make the Source type {"Short"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Short
-    Dim fraction As Short = 1S
-    Return 1S + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
-
-#Region "Decimal Tests"
-
-    <TestMethod, TestCategory("Decimal")>
-    Public Sub Test_Decimal_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 0D
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 0D
-    fraction += 1D
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Decimal")>
-    Public Sub Test_Decimal_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 1D
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 1D
-    Return fraction + 1D
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Decimal")>
-    Public Sub Test_Decimal_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 1D
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Decimal"} and Source type is {"Integer"}. Do you want to add the type suffix '{"D"}' to make the Source type {"Decimal"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Decimal
-    Dim fraction As Decimal = 1D
-    Return 1D + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
-    
-#Region "Double Tests"
-
-    <TestMethod, TestCategory("Double")>
-    Public Sub Test_Double_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 0R
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 0R
-    fraction += 1R
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Double")>
-    Public Sub Test_Double_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 1R
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 1R
-    Return fraction + 1R
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Double")>
-    Public Sub Test_Double_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 1R
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Double"} and Source type is {"Integer"}. Do you want to add the type suffix '{"R"}' to make the Source type {"Double"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Double
-    Dim fraction As Double = 1R
-    Return 1R + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-#End Region
-
-#Region "Single Tests"
-
-    <TestMethod, TestCategory("Single")>
-    Public Sub Test_Single_CompoundAssignment()
-
-      Dim test = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 0F
-    fraction += 1
-    Return fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 17) }
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 0F
-    fraction += 1F
-    Return fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Single")>
-    Public Sub Test_Single_Operator_Right()
-
-      Dim test = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 1F
-    Return fraction + 1
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 23)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 1F
-    Return fraction + 1F
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
-    End Sub
-
-    <TestMethod, TestCategory("Single")>
-    Public Sub Test_Single_Operator_Left()
-
-      Dim test = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 1F
-    Return 1 + fraction
-  End Function
-End Module"
-      Dim expected As New DiagnosticResult With
-                        { .Id = "NumberSuffix",
-                          .Message = $"Target type is {"Single"} and Source type is {"Integer"}. Do you want to add the type suffix '{"F"}' to make the Source type {"Single"}?",
-                          .Severity = DiagnosticSeverity.Warning,
-                          .Locations = { New DiagnosticResultLocation("Test0.vb", 5, 12)}
-                        }
-
-      VerifyBasicDiagnostic(test, expected)
-
-      Dim fixtest = "
-Module Module1
-  Function m() As Single
-    Dim fraction As Single = 1F
-    Return 1F + fraction
-  End Function
-End Module"
-      VerifyBasicFix(test, fixtest)
     End Sub
 
 #End Region

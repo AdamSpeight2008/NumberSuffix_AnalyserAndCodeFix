@@ -74,7 +74,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NumberSuffixAnalyser.png">
+    <Content Include="NumberSuffixAnalyser2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="NumberSuffixAnalyser3.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

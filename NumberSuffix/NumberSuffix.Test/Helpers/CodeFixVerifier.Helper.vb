@@ -4,7 +4,7 @@ Imports Microsoft.CodeAnalysis.Formatting
 Imports Microsoft.CodeAnalysis.Simplification
 Imports System.Threading
 
-Namespace TestHelper
+Namespace Test.TestHelper
   ' Diagnostic Producer class with extra methods dealing with applying codefixes
   ' All methods are shared
   Partial Public MustInherit Class CodeFixVerifier

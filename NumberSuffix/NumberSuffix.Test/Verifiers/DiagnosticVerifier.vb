@@ -3,7 +3,7 @@ Imports Microsoft.CodeAnalysis.Diagnostics
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports System.Text
 
-Namespace TestHelper
+Namespace Test.TestHelper
   ''' <summary> Superclass of all Unit Tests for DiagnosticAnalyzers. </summary>
   Partial Public MustInherit Class DiagnosticVerifier
 #Region " To be implemented by Test classes "
